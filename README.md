@@ -1,4 +1,7 @@
 # PI2_GMM
+Code for publication :
+
+Rey, J, Kronander, K., Farshidian, F, Buchli, J and Billard, A. (2017) **Learning motions from demonstrations and rewards with time-invariant dynamical systems based policies.** Autonomous Robots. In press. [Go to publications page.](http://lasa.epfl.ch/publications/publications.php)
 
 ## How use the code
 There are different versions of the code that have been used for different scenarios.
