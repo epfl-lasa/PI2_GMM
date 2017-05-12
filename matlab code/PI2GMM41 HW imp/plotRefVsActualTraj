@@ -1,0 +1,17 @@
+figure
+hold on
+plot(D_eval.traj_y(1,:),D_eval.traj_y(2,:),'r')
+plot(D_eval.real_q(1,:),D_eval.real_q(2,:),'b')
+
+figure
+hold on
+plot(D_eval.traj_y(3,:),'r')
+plot(D_eval.real_q(3,:),'b')
+
+
+
+
+
+
+
+

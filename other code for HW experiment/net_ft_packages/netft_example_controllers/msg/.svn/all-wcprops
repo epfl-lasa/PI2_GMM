@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/wg-ros-pkg/!svn/ver/49238/stacks/netft/trunk/netft_example_controllers/msg
+END
+ForceTorqueStats.msg
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/wg-ros-pkg/!svn/ver/49238/stacks/netft/trunk/netft_example_controllers/msg/ForceTorqueStats.msg
+END

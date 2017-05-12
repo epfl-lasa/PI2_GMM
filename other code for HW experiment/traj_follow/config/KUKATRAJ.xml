@@ -1,0 +1,38 @@
+<Config>
+
+<Packages> kuka_robot_model traj_follow </Packages>
+
+
+  <World> Examples/BasicWorld
+  </World>
+
+
+
+    <Robot> KUKA
+        <Name> KUKA </Name>
+        <RobotModule> KUKA_6dTRAJ
+            <Options>
+            </Options>
+        </RobotModule> 
+
+        <RobotModule> robot_state_publisher
+            <Options>
+            </Options>
+        </RobotModule> 
+
+        <ControlMode>  position    </ControlMode>
+        <Args>                    </Args>
+
+        <Origin>  0 0.0 0.0 </Origin>
+        <Orient> 1.0  0.0  0.0 
+                  0.0 1.0  0.0
+                  0.0  0.0  1.0
+        </Orient>            
+    </Robot>
+
+
+  <Simulator>
+   
+    <Gravity> 0 0 -9.81 </Gravity>
+  </Simulator>
+</Config>

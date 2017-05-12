@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/wg-ros-pkg/!svn/ver/53011/stacks/netft/trunk/netft_ethercat_hardware/include/netft_ethercat_hardware
+END
+netft.h
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/wg-ros-pkg/!svn/ver/53011/stacks/netft/trunk/netft_ethercat_hardware/include/netft_ethercat_hardware/netft.h
+END
+thread_safe_double_buffer.h
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/svn/wg-ros-pkg/!svn/ver/49165/stacks/netft/trunk/netft_ethercat_hardware/include/netft_ethercat_hardware/thread_safe_double_buffer.h
+END

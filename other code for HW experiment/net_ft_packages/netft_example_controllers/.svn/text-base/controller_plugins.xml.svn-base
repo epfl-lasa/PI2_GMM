@@ -1,0 +1,5 @@
+<library path="lib/libnetft_example_controllers">
+  <class name="netft_example_controllers/NetFTExampleController" 
+         type="netft_example_controllers::NetFTExampleController"           
+         base_class_type="pr2_controller_interface::Controller" />
+</library>

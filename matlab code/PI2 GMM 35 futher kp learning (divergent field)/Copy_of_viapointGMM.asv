@@ -1,0 +1,43 @@
+function R=viapoint(D,GMR)
+% implements a simple squared acceleration cost function with a penalty on
+% the length of the parameter vector. Additionally, a via point has to be traversed at
+% certain moment of time
+
+
+n_reps = length(D);
+n      = length(D(1).q);         % the length of a trajectory in time steps
+n_real = D(1).duration/D(1).dt;  % the duration of the core trajectory in time steps --
+                                 % everything beyond this time belongs to the terminal cost
+
+% compute cost
+% RR = D.RctrlCost; % disregard the lambda factor, to allow the transition
+% cost to be scaled down;
+QQ = 1;
+
+R = zeros(n,n_reps);
+
+% the penalty along the trajector
+for k=1:n_reps,
+  r  = zeros(1,n_real);
+
+  
+  for i=1:n_real,
+    % cost during trajectory
+    r(i)  = 0.5 * QQ * norm(D(k).qdd(:,i))^2; % + ...
+%   trans cost      0.5 * (GMR.theta+ M*D(k).eps(:,i))'*RR*(GMR.theta+ M*D(k).eps(:,i));
+  end
+    
+    % terminal cost: penalize distance from goal and remaining velocity
+% rt =  1 * sum(D(k).qd(:,n_real+1:end).^2 , 1)+ ...
+%     1000 * sum((D(k).q(:,n_real+1:end)-repmat(D(k).goal,1,n-n_real)).^2, 1);
+
+  
+  % pass through the point [0.5 0.2] at t=0.25 seconds
+
+  r(end)  = r(end) + 100*((D(k).q(1,end)+0)^2 + (D(k).q(2,end)+ 0)^2);
+  
+  r(end) = r(end) + 
+  
+  R(:,k) = [r';rt'];
+end
+

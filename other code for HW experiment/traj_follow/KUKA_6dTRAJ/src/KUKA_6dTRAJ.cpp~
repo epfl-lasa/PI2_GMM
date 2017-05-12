@@ -1,0 +1,473 @@
+/*
+ * Copyright (C) 2010 Learning Algorithms and Systems Laboratory, EPFL, Switzerland
+ * Author: Eric Sauser
+ * email:   eric.sauser@a3.epf.ch
+ * website: lasa.epfl.ch
+ *
+ * Permission is granted to copy, distribute, and/or modify this program
+ * under the terms of the GNU General Public License, version 2 or any
+ * later version published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details
+ */
+
+#include "KUKA_6dTRAJ.h"
+
+void setVector(Vector3 & v,double x,double y,double z){
+    v(0)=x;
+    v(1)=y;
+    v(2)=z;
+}
+
+void setVector(Vector & v,double x,double y,double z){
+    v(0)=x;
+    v(1)=y;
+    v(2)=z;
+}
+
+void setVector(Vector & v,Vector3 & v3){
+    v(0)=v3(0);
+    v(1)=v3(1);
+    v(2)=v3(2);
+}
+
+Eigen::Matrix3d MathlibToEigen(const Matrix3 & in){
+    Eigen::Matrix3d result;
+    for(int i=0;i<3;i++){
+        for(int j=0;j<3;j++)
+            result(i,j)=in.At(i,j);
+    }
+    return result;
+}
+
+Matrix3 EigenToMathlib(const Eigen::Matrix3d & in){
+    Matrix3 result;
+    for(int i=0;i<3;i++){
+        for(int j=0;j<3;j++)
+            result(i,j)=in(i,j);
+    }
+    return result;
+}
+
+void trun(REALTYPE & in, REALTYPE min, REALTYPE max){
+    if(in<min)
+        in = min;
+    else if(in>max)
+        in =max;
+}
+
+KUKA_6dTRAJ::KUKA_6dTRAJ()
+    :RobotInterface(){
+}
+KUKA_6dTRAJ::~KUKA_6dTRAJ(){
+}
+
+
+void KUKA_6dTRAJ::RobotDraw(){
+    MathLib::Matrix4 Htemp;
+    //Vector3 translation;
+
+
+    //translation.Set(cartCommand);
+    //translation.Print();
+    //translation(1) = 1;
+    Htemp.SetTransformation(cartCommandOrient,cartCommand);
+    //Htemp.Print();
+    glPushMatrix();
+    glMultMatrixf(Htemp.RowOrderForceFloat());
+    GLTools::DrawOutline(false);
+    GLTools::SetColor(0.6,0.1,0.1,1);
+    GLTools::DrawSphere(0.02,20,20);
+    GLTools::DrawRef();
+    glPopMatrix();
+
+    //    Htemp.SetTransformation(referenceOrient,referencePos);
+    //    GLTools::DrawRef(0.1,&Htemp);
+
+}
+
+
+void KUKA_6dTRAJ::referenceTrajectoryCallback(const TRAJECTORY_MSG::ConstPtr & Msg){
+
+    int trajLen = Msg->poses.size();
+    trajectoryQueue.push(*Msg);
+    // trajectoryQueue.back()->Resize(trajLen,2);
+    // Matrix * trajectory;
+    // trajectory = trajectoryQueue.back();
+    // POSE_MSG posMsg;
+    // for(int i=0;i<Msg->poses.size();i++){
+    //     (*trajectory)(i,0) = Msg->poses[i].position.x;
+    //     (*trajectory)(i,0) = Msg->poses[i].position.y;
+
+    // }
+    GetConsole()->Print("Received a new trajectory");
+    char txt[256];
+    sprintf(txt,"currently %d trajectories in the queue.",trajectoryQueue.size());
+    GetConsole()->Print(txt);
+}
+
+void KUKA_6dTRAJ::measuredForceCallback(const geometry_msgs::WrenchStamped wrenchMsg){
+    latestForceMeasurement(0) = wrenchMsg.wrench.force.x;
+    latestForceMeasurement(1) = wrenchMsg.wrench.force.y;
+    latestForceMeasurement(2) = wrenchMsg.wrench.force.z;
+}
+
+/*
+void KUKA_6dTRAJ::stiffnessCallback(const LBCStiffnessAdaptation::VectorStamped::ConstPtr & Msg){
+  Vector receivedStiffness(6);
+  for(int i=0;i<3;i++){
+    receivedStiffness(i) = Msg->data[i];
+    // keep hardcoded value for orientation for now
+    movingStiffness(i) = receivedStiffness(i);
+  }
+
+  mLWRRobot->SetCartStiffness(movingStiffness);
+}
+*/
+
+
+RobotInterface::Status KUKA_6dTRAJ::RobotInit(){
+
+    // a little hack to avoid segfaults in simulation mode. The LWR object is only created by LWRInterface.. 
+    if(mRobot->IsSimulationMode()){
+        mLWRRobot = new LWRRobot();
+    }else{
+        mLWRRobot = (LWRRobot*)mRobot;
+    }
+
+    mLWRRobot->GetMeasuredCartPose(currPos,currOrient);
+    mLWRRobot->SetCartCommand(currPos,currOrient);
+    cartCommand = currPos;
+    setVector(cartCommandV,cartCommand);
+    cartCommandOrient = currOrient;
+    qControlMatrix = MathlibToEigen(cartCommandOrient);
+    qControl = quat(qControlMatrix);
+    qStart = qControl;
+    qTarget = qControl;
+
+    // robot should be in cartesian impedance mode
+    if(mRobot->GetControlMode()!=Robot::CTRLMODE_CARTIMPEDANCE)
+        mRobot->SetControlMode(Robot::CTRLMODE_CARTIMPEDANCE);
+
+    // update the cartCommand to the current pose
+    //      currPos.Print();
+
+    // this is a handy boolean used for handling state transitions
+    bFirst = true;
+
+    // stuff related to cartesian planning and control
+    cartTarget.Resize(3);
+    cartCommandV.Resize(3);
+    cartesianPlanner = new CDDynamics(3,0.002,4);
+    Vector velLimits(3);
+    velLimits.One();
+    velLimits *= 0.1;
+    cartesianPlanner->SetVelocityLimits(velLimits);
+
+    movingStiffness.Resize(6);
+    minStiffness.Resize(6);
+    // take default stiffness
+    movingStiffness = mLWRRobot->GetCartStiffness();
+    // modify stiffness in xy-plane to improve accuracy
+    for(int i=0;i<3;i++){
+      movingStiffness(i) = 400;
+      movingStiffness(3+i) = 40;
+      minStiffness(i) = 100;
+      minStiffness(3+i) = 10;
+   }
+    // movingStiffness(1) = 0.0;
+    // movingStiffness(2) = 0.0;
+   // movingStiffness.Print();
+    // set up a stiffness for gravity compensation with locked orientation
+    gravCompStiffness.Resize(6);
+    gravCompStiffness = movingStiffness;
+    //set translational stiffness to zero
+    for(int i=0;i<6;i++){
+        gravCompStiffness(i)=0;
+    }
+    // starting state for robot
+    taskState = GRAVCOMP;
+    // by default, do not answer to incoming trajectories
+    bTrajectoryFollowingEnabled = false;
+
+
+    // some variables used for orientation control
+//    qTarget = new quat;
+//    qStart = new quat;
+//    qInterp = new quat;
+
+
+
+
+     nh = mRobot->InitializeROS();
+     string topicName;
+     topicName = mRobot->GetName();
+     topicName += "/TaskStatus";
+     statusPublisher = nh->advertise<std_msgs::String>(topicName,100);
+     ExecStr.data = "EXECUTING";
+     PrepStr.data = "PREPARING";
+     IdleStr.data = "IDLE";
+     topicName = mRobot->GetName();
+     topicName += "/CartesianError";
+     cartesianErrorPublihser = nh->advertise<geometry_msgs::PoseStamped>(topicName,100);
+
+     trajSub = nh->subscribe("/trajectories",100,&KUKA_6dTRAJ::referenceTrajectoryCallback,this);
+     wrenchSub = nh->subscribe("/comp_wrenchBase_pub",100,&KUKA_6dTRAJ::measuredForceCallback,this);
+     //stiffnessSub = nh->subscribe("/StiffnessAdaptationNode/Stiffness",100,&KUKA_6dTRAJ::stiffnessCallback,this);
+
+
+    // define a few commands for console interaction
+    AddConsoleCommand("cimp");
+    AddConsoleCommand("o");
+    AddConsoleCommand("p");
+    AddConsoleCommand("t");
+    AddConsoleCommand("i");
+    return STATUS_OK;
+}
+RobotInterface::Status KUKA_6dTRAJ::RobotFree(){
+    return STATUS_OK;
+}
+RobotInterface::Status KUKA_6dTRAJ::RobotStart(){
+    return STATUS_OK;
+}    
+RobotInterface::Status KUKA_6dTRAJ::RobotStop(){
+    return STATUS_OK;
+}
+RobotInterface::Status KUKA_6dTRAJ::RobotUpdate(){
+   // mLWRRobot->GetCartStiffness().Print();
+    ros::spinOnce();
+    return STATUS_OK;
+}
+RobotInterface::Status KUKA_6dTRAJ::RobotUpdateCore(){
+    if(mRobot->IsSimulationMode()){
+        currPos  = mRobot->GetReferenceFrame(mRobot->GetLinksCount()-1,0).GetOrigin();
+        currOrient = mRobot->GetReferenceFrame(mRobot->GetLinksCount()-1,0).GetOrient();
+    }else{
+        mLWRRobot->GetMeasuredCartPose(currPos,currOrient);
+    }
+
+    switch(taskState){
+    {
+    case PREPARE:
+            //trajectoryQueue.front()->Print();
+            // set the control mode
+            if(mRobot->GetControlMode()!=Robot::CTRLMODE_CARTIMPEDANCE)
+                mRobot->SetControlMode(Robot::CTRLMODE_CARTIMPEDANCE);
+
+            // initialize the planner
+            if(bFirst){
+                setVector(cartTarget,trajectoryQueue.front().poses[0].position.x,trajectoryQueue.front().poses[0].position.y,trajectoryQueue.front().poses[0].position.z + EXECUTE_HEIGHT_OFFSET);
+                cartesianPlanner->SetState(cartCommandV);
+                cartesianPlanner->SetTarget(cartTarget);
+
+                qTempRos = &(trajectoryQueue.front().poses[0].orientation);
+                qTarget = quat(qTempRos->w,qTempRos->x,qTempRos->y,qTempRos->z); //Eigen::Quaternion(trajectoryQueue.front().poses[0].orientation.w,trajectoryQueue.front().poses[0].orientation.x,trajectoryQueue.front().poses[0].orientation.y,trajectoryQueue.front().poses[0].orientation.z);
+                qStart = qControl;
+                init_dist =(cartTarget-cartCommandV).Norm();
+                curr_dist = init_dist;
+
+                bFirst = false;
+                GetConsole()->Print("preparing trajectory execution..");
+                char txt[256];
+                sprintf(txt,"currently %d trajectories in the queue.",trajectoryQueue.size());
+                GetConsole()->Print(txt);
+                mLWRRobot->SetCartStiffness(movingStiffness);
+
+            }
+            curr_dist =(cartTarget-cartCommandV).Norm();
+            orient_interp = 1.0-curr_dist/init_dist;
+            trun(orient_interp,0.0,1.0);
+            //cout<<orient_interp<<endl;
+            qControl = qStart.slerp(orient_interp,qTarget);
+            qControlMatrix = qControl.toRotationMatrix();
+            cartCommandOrient = EigenToMathlib(qControlMatrix);
+
+
+
+            cartesianPlanner->Update();
+            cartesianPlanner->GetState(cartCommandV);
+            //cartCommandV.Print();
+            cartCommand.Set(cartCommandV);
+            mLWRRobot->SetCartCommand(cartCommand,cartCommandOrient);
+            // check if target reached
+            //cartCommand.Print();
+            //(cartTarget-cartCommandV).Print();
+            statusPublisher.publish(PrepStr);
+            if((cartTarget-cartCommandV).Norm()<0.003)
+                switchState(EXECUTE);
+            break;
+    }
+
+    {
+    case EXECUTE:
+            if(mRobot->GetControlMode()!=Robot::CTRLMODE_CARTIMPEDANCE)
+                mRobot->SetControlMode(Robot::CTRLMODE_CARTIMPEDANCE);
+
+            if(bFirst){
+                currRow = 0;
+                bFirst = false;
+                GetConsole()->Print("starting trajectory execution");
+                mLWRRobot->SetCartStiffness(movingStiffness);
+
+            }
+
+            pTempRos = &(trajectoryQueue.front().poses[currRow].position);
+            qTempRos = &(trajectoryQueue.front().poses[currRow].orientation);
+	    kTempRos = &(trajectoryQueue.front().stiffs[currRow]);
+	  //  cout <<  *kTempRos << "\n";
+            // set the cartcommand
+            setVector(cartCommand,pTempRos->x,pTempRos->y,pTempRos->z+EXECUTE_HEIGHT_OFFSET);
+            // keep a copy in s standard vector type
+            setVector(cartCommandV,cartCommand);
+
+            RLStiffness.Resize(6);
+	    for(int i=0;i<3;i++){
+      		RLStiffness(i) = *kTempRos;
+      		RLStiffness(3+i) = *kTempRos/10;
+   	    }
+
+            qControl = quat(qTempRos->w,qTempRos->x,qTempRos->y,qTempRos->z);
+            qControlMatrix = qControl.toRotationMatrix();
+            cartCommandOrient = EigenToMathlib(qControlMatrix);
+            mLWRRobot->SetCartCommand(cartCommand,cartCommandOrient);
+	    RLStiffness.Print();
+          //  latestForceMeasurement.Print();
+            if(latestForceMeasurement.Norm() < 50)
+	    {
+	        mLWRRobot->SetCartStiffness(RLStiffness);
+	    }
+	    else
+	    {
+                cout << "Forces higher than limit, setting stiffness to min value" << "\n";
+            	mLWRRobot->SetCartStiffness(minStiffness);
+            }
+
+	    //mLWRRobot->SetCartStiffness(Vector(6))
+            currRow++;
+
+            statusPublisher.publish(ExecStr);
+            if(currRow>trajectoryQueue.front().poses.size()-1){
+                GetConsole()->Print("trajectory completed");
+                trajectoryQueue.pop();
+                switchState(IDLE);
+            }
+
+            PublishCartesianError();
+
+            break;
+    }
+
+
+    {
+    case GRAVCOMP:
+            if(mRobot->GetControlMode()!=Robot::CTRLMODE_GRAVITYCOMPENSATION)
+                mRobot->SetControlMode(Robot::CTRLMODE_GRAVITYCOMPENSATION);
+
+            cartCommand = currPos;
+            setVector(cartCommandV,cartCommand);
+            cartCommandOrient = currOrient;
+            qControlMatrix = MathlibToEigen(cartCommandOrient);
+            qControl = quat(qControlMatrix);
+	    mLWRRobot->SetCartCommand(cartCommand,cartCommandOrient);
+            break;
+    }
+    {
+    case IDLE:
+            if(mRobot->GetControlMode()!=Robot::CTRLMODE_CARTIMPEDANCE)
+                mRobot->SetControlMode(Robot::CTRLMODE_CARTIMPEDANCE);
+
+            // update the cartCommand to the current pose
+            //mLWRRobot->GetMeasuredCartPose(currPos,currOrient);
+            //      currPos.Print();
+            //cartOrientTarget = currOrient;
+
+            // cartCommand = currPos;
+            // setVector(cartCommandV,cartCommand);
+            // cartCommandOrient = currOrient;
+            // qControlMatrix = MathlibToEigen(cartCommandOrient);
+            // qControl = quat(qControlMatrix);
+
+            PublishCartesianError();
+            //
+            //mLWRRobot->SetCartCommand(currPos,cartCommandOrient);
+            //gravCompStiffness.Print();
+	    mLWRRobot->SetCartStiffness(movingStiffness);
+
+            statusPublisher.publish(IdleStr);
+            // when we have received trajectories, start executing them
+            if(!trajectoryQueue.empty() && bTrajectoryFollowingEnabled)
+                switchState(PREPARE);
+
+            break;
+    }
+
+    }
+
+
+
+    return STATUS_OK;
+}
+
+
+void KUKA_6dTRAJ::PublishCartesianError(){
+    Vector3 cartError = currPos-cartCommand;
+    Matrix3 cartOrientError;
+    //    currOrient.MultTranspose(cartCommandOrient,cartOrientError);
+    cartCommandOrient.Mult(currOrient.Transpose(),cartOrientError);
+    quat qCartOrientError = quat(MathlibToEigen(cartOrientError));
+    geometry_msgs::PoseStamped msg;
+    msg.pose.position.x = cartError(0);
+    msg.pose.position.y = cartError(1);
+    msg.pose.position.z = cartError(2);
+    msg.pose.orientation.w = qCartOrientError.w();
+    msg.pose.orientation.x = qCartOrientError.x();
+    msg.pose.orientation.y = qCartOrientError.y();
+    msg.pose.orientation.z = qCartOrientError.z();
+
+    msg.header.stamp = ros::Time::now();
+
+    // temporary remove!!!!!
+    //    msg.pose.position.x  = 0.1;
+
+    cartesianErrorPublihser.publish(msg);
+}
+
+
+int KUKA_6dTRAJ::RespondToConsoleCommand(const string cmd, const vector<string> &args){
+    if(cmd=="cimp"){
+        switchState(PREPARE);
+    }else if(cmd=="o"){
+        switchState(GRAVCOMP);
+    }
+    else if(cmd=="t"){
+        // toggle trajectory following enableb
+        bTrajectoryFollowingEnabled = !bTrajectoryFollowingEnabled;
+        if(bTrajectoryFollowingEnabled)
+            GetConsole()->Print("Trajectory following enabled");
+        else
+            GetConsole()->Print("Trajectory following disabled");
+    }else if(cmd=="i"){
+        switchState(IDLE);
+    }
+
+    return 0;
+}
+
+
+extern "C"{
+// These two "C" functions manage the creation and destruction of the class
+KUKA_6dTRAJ* create(){return new KUKA_6dTRAJ();}
+void destroy(KUKA_6dTRAJ* module){delete module;}
+}
+
+void KUKA_6dTRAJ::switchState(stateEnumerator newState)
+{
+    bFirst = true;
+    taskState = newState;
+}
+
+
+

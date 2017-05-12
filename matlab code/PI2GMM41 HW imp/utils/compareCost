@@ -1,0 +1,13 @@
+
+    
+    scatter(j,result.cost(1,3));   % tot cost
+    scatter(j,result.cost(1,5),'r'); % viapoint cost
+    scatter(j,result.cost(1,6),'g'); % acceleration cost
+    scatter(j,result.cost(1,7),'k'); % control cost
+    scatter(j,result.cost(1,8),'c'); % dirt cost
+    scatter(j,result.cost(1,9),'m'); % forces cost
+    scatter(j,result.cost(1,10),'y'); % stiffness cost
+    xlabel('Trial number');
+    ylabel('Cost');
+    j= j+1
+  

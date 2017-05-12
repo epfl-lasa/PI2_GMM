@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/wg-ros-pkg/!svn/ver/49239/stacks/netft/trunk/netft_example_controllers
+END
+controller_plugins.xml
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/wg-ros-pkg/!svn/ver/49238/stacks/netft/trunk/netft_example_controllers/controller_plugins.xml
+END
+manifest.xml
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/wg-ros-pkg/!svn/ver/49238/stacks/netft/trunk/netft_example_controllers/manifest.xml
+END
+example_controller.launch
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/wg-ros-pkg/!svn/ver/49238/stacks/netft/trunk/netft_example_controllers/example_controller.launch
+END
+mainpage.dox
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/wg-ros-pkg/!svn/ver/49238/stacks/netft/trunk/netft_example_controllers/mainpage.dox
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/wg-ros-pkg/!svn/ver/49238/stacks/netft/trunk/netft_example_controllers/CMakeLists.txt
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/wg-ros-pkg/!svn/ver/49238/stacks/netft/trunk/netft_example_controllers/Makefile
+END

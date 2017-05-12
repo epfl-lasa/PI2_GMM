@@ -1,0 +1,7 @@
+<library path="lib/libnetft_ethercat_hardware" >
+  <class name="netft_ethercat_hardware/NetFT" type="netft_ethercat_hardware::NetFT" base_class_type="EthercatDevice">
+    <description>
+      NetFT - NetFT EtherCAT plugin
+    </description>
+  </class>
+</library>

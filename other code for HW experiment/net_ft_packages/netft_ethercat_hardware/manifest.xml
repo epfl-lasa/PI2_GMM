@@ -1,0 +1,26 @@
+<package>
+  <description brief="netft_ethercat_hardware">
+
+    pr2_etherCAT/ethercat_hardware driver plugin for NetFT sensor
+    NetFT does not use EtherCAT, however, having plugin allows 
+    realtime controllers get data from NetFT box.
+
+  </description>
+  <author>Derek King</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/netft_ethercat_hardware</url>
+  <depend package="roscpp"/>
+  <depend package="realtime_tools"/>
+  <depend package="ethercat_hardware"/>
+  <depend package="netft_rdt_driver"/>
+  <depend package="geometry_msgs"/>
+
+  <export>
+    <ethercat_hardware plugin="${prefix}/ethercat_device_plugin.xml" />
+  </export>
+
+
+</package>
+
+

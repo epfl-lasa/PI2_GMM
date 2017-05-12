@@ -1,0 +1,47 @@
+% The protocol file has the following columns:
+%
+% start_x start_y goal_x goal_y duration std repetitions cost_function updates
+%
+% where
+% start_x, start_y: the start position
+% duration        : the duration of the run
+% std             : standard deviation of added noise for parameters
+% repetitions     : repetitions of movement before learning update
+% cost_function   : name of the cost function to use
+% updates         : number of PI2 updates to perform
+% fixed_noise     : noise is fixed for the duration of a roll-out (noise that may be applied to input space params, if option 2 selected, is always fixed in the current implementation)
+% selective_noise : noise is only applied to the parameters of the most active Gaussian (only implemented for fixed gaussians)
+% n_reuse         : number of re-used trials per update
+% gaussian_centers : option for learning gaussian centers, 0 : fixed, 1 (deprecated) : rerun EM episodically, 2 : include gaussian centers as PI2 learned variables (use fixed_noise for this), 3: spawn/kill methode
+% feedback          : chooses where the position feedback must come from; 0 : virtual trajectory, 1 : actual position (simulated mass point)
+% useSEDS          : apply noise that is compatible with SEDS
+% PI2_type          : PI2_no_M, PI2_01, PI2_01b, PI2_BB
+% n_runs            : number of times the PI2 algorithm must be run with the current parameters, for obstaining statistical results
+% releanGMM       : relearn the GMM at each new run (is SEDSinit deterministic?)
+% n_Gauss           : number of Gaussians used for the policy
+% kp0               : initial value of the PD gaifinn parameter kp
+% demo_set          : name of the .m file containing the set of demonstrations used to initialize the policy (containing variables named demos and dt)
+% duration_convergence  : duration of the convergence test at the end of the trajectory
+%
+% start_x  start_y  duration  dt     std   repetitions     cost_function                     updates  fixed_noise   selective_noise  n_reuse  gaussian_centers  feedback  SEDS_constr  SEDS_init    PI2_type           n_runs  relearnGMM  n_Gauss   kp0   demo_set    duration_convergence disable_plotting
+ -120      -100       12     0.1    0.02       10        viapoint_Nshape3SyncAndFinal              50        1             0                0        0                 0         0           0         PI2_BB               20       1           4      10     myNshape1     0                        1
+ -120      -100       12     0.1    0.02       10        viapoint_Nshape3SyncAndFinal               50        1             0                0        0                 0         0           0         PI2_original         20       1           4      10     myNshape1     0                        1
+ -120      -100       12     0.1    0.02       10        viapoint_Nshape3SyncAndFinal               50        1             0                0        0                 0         0           0         PI2_no_M             20       1           4      10     myNshape1     0                        1
+ -120      -100       12     0.1    0.02       10        viapoint_Nshape3SyncAndFinal               50        1             0                0        0                 0         0           0         PI2_01               20       1           4      10     myNshape1     0                        1
+-120      -100       12     0.1    0.02       10        viapoint_Nshape4SyncAndFinal                50        1             0                0        0                 0         0           0         PI2_BB               20       1           4      10     myNshape1     0                        1
+-120      -100       12     0.1    0.02       10        viapoint_Nshape4SyncAndFinal                50        1             0                0        0                 0         0           0         PI2_original         20       1           4      10     myNshape1     0                        1
+-120      -100       12     0.1    0.02       10        viapoint_Nshape4SyncAndFinal                50        1             0                0        0                 0         0           0         PI2_no_M             20       1           4      10     myNshape1     0                        1
+-120      -100       12     0.1    0.02       10        viapoint_Nshape4SyncAndFinal                50        1             0                0        0                 0         0           0         PI2_01               20       1           4      10     myNshape1     0                        1
+   0       100       4     0.1    0.02       10        viapoint_CshapeSyncAndFinal                  50        1             0                0        0                 0         0           0         PI2_BB               20       1           4      10     CShape     0                        1
+   0       100       4     0.1    0.02       10        viapoint_CshapeSyncAndFinal                  50        1             0                0        0                 0         0           0         PI2_original         20       1           4      10     CShape     0                        1
+   0       100       4     0.1    0.02       10        viapoint_CshapeSyncAndFinal                  50        1             0                0        0                 0         0           0         PI2_no_M             20       1           4      10     CShape     0                        1
+   0       100       4     0.1    0.02       10        viapoint_CshapeSyncAndFinal                  50        1             0                0        0                 0         0           0         PI2_01               20       1           4      10     CShape     0                        1  
+   0        0       10     0.1    0.04       10        viapoint_LineTurnSyncAndFinalFreeTime       50        1             0                0        0                 0         0           0         PI2_BB               20       1           4      10        myLine       0                        1
+   0        0       10     0.1    0.04       10        viapoint_LineTurnSyncAndFinalFreeTime       50        1             0                0        0                 0         0           0         PI2_original         20       1           4      10        myLine       0                        1
+   0        0       10     0.1    0.04       10        viapoint_LineTurnSyncAndFinalFreeTime       50        1             0                0        0                 0         0           0         PI2_no_M             20       1           4      10        myLine       0                        1
+   0        0       10     0.1    0.04       10        viapoint_LineTurnSyncAndFinalFreeTime       50        1             0                0        0                 0         0           0         PI2_01               20       1           4      10        myLine       0                        1
+   0        0       15     0.1    0.04       10        viapoint_LineBumpSyncAndFinalFreeTime       50        1             0                0        0                 0         0           0         PI2_BB               20       1           4      10        myLine       0                        1
+   0        0       15     0.1    0.04       10        viapoint_LineBumpSyncAndFinalFreeTime       50        1             0                0        0                 0         0           0         PI2_original         20       1           4      10        myLine       0                        1
+   0        0       15     0.1    0.04       10        viapoint_LineBumpSyncAndFinalFreeTime       50        1             0                0        0                 0         0           0         PI2_no_M             20       1           4      10        myLine       0                        1
+   0        0       15     0.1    0.04       10        viapoint_LineBumpSyncAndFinalFreeTime       50        1             0                0        0                 0         0           0         PI2_01               20       1           4      10        myLine       0                        1
+  

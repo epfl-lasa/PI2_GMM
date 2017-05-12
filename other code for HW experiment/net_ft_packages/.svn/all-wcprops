@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/wg-ros-pkg/!svn/ver/53570/stacks/netft/trunk
+END
+stack.xml
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/wg-ros-pkg/!svn/ver/53570/stacks/netft/trunk/stack.xml
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/wg-ros-pkg/!svn/ver/53570/stacks/netft/trunk/CMakeLists.txt
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/wg-ros-pkg/!svn/ver/49165/stacks/netft/trunk/Makefile
+END

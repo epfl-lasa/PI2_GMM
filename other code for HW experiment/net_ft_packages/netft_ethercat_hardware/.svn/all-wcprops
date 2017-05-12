@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/wg-ros-pkg/!svn/ver/53011/stacks/netft/trunk/netft_ethercat_hardware
+END
+example.launch
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/wg-ros-pkg/!svn/ver/49239/stacks/netft/trunk/netft_ethercat_hardware/example.launch
+END
+manifest.xml
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/wg-ros-pkg/!svn/ver/49165/stacks/netft/trunk/netft_ethercat_hardware/manifest.xml
+END
+mainpage.dox
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/wg-ros-pkg/!svn/ver/49165/stacks/netft/trunk/netft_ethercat_hardware/mainpage.dox
+END
+ethercat_device_plugin.xml
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/wg-ros-pkg/!svn/ver/53011/stacks/netft/trunk/netft_ethercat_hardware/ethercat_device_plugin.xml
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/wg-ros-pkg/!svn/ver/49165/stacks/netft/trunk/netft_ethercat_hardware/CMakeLists.txt
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/wg-ros-pkg/!svn/ver/49165/stacks/netft/trunk/netft_ethercat_hardware/Makefile
+END
